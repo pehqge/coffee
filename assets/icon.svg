@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#6b4226"/>
+      <stop offset="0.55" stop-color="#3a2113"/>
+      <stop offset="1" stop-color="#1c0f08"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.36" r="0.6">
+      <stop offset="0" stop-color="#c98a4b" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#c98a4b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cream" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fffaf2"/>
+      <stop offset="1" stop-color="#efe1cf"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1024" height="1024" rx="229" ry="229" fill="url(#bg2)"/>
+  <rect x="0" y="0" width="1024" height="1024" rx="229" ry="229" fill="url(#glow)"/>
+
+  <!-- steam -->
+  <g fill="none" stroke="url(#cream)" stroke-width="22" stroke-linecap="round" opacity="0.85">
+    <path d="M452 360 C 412 312, 492 268, 452 220 C 420 182, 470 150, 452 120"/>
+    <path d="M512 372 C 472 322, 552 276, 512 226 C 480 186, 530 152, 512 118"/>
+    <path d="M572 360 C 532 312, 612 268, 572 220 C 540 182, 590 150, 572 120"/>
+  </g>
+
+  <!-- saucer -->
+  <ellipse cx="512" cy="742" rx="262" ry="54" fill="url(#cream)"/>
+  <ellipse cx="512" cy="730" rx="200" ry="34" fill="#000000" opacity="0.10"/>
+
+  <!-- handle -->
+  <path d="M666 500 C 772 492, 786 624, 672 624" fill="none" stroke="url(#cream)" stroke-width="42" stroke-linecap="round"/>
+
+  <!-- cup body -->
+  <path d="M356 470 L 398 642 Q 512 706 626 642 L 668 470 A 156 46 0 0 1 356 470 Z" fill="url(#cream)"/>
+  <!-- cup opening -->
+  <ellipse cx="512" cy="470" rx="154" ry="42" fill="#e3d4bf"/>
+  <ellipse cx="512" cy="476" rx="120" ry="30" fill="#7a4a28"/>
+</svg>

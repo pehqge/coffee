@@ -1,0 +1,6 @@
+# build output
+Coffee.app/
+*.zip
+
+# macOS
+.DS_Store
