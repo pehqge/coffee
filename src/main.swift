@@ -16,6 +16,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var timer: Timer?
     private var active = false
 
+    // Pre-rendered icons: swapping the button image is then a pointer assignment.
+    private static let iconOn = cupImage(active: true)
+    private static let iconOff = cupImage(active: false)
+
+    // All Process spawns (sudo/pmset) run here, off the main thread and
+    // serialized so rapid clicks can't interleave.
+    private let workQueue = DispatchQueue(label: "coffee.pmset", qos: .userInitiated)
+
     func applicationDidFinishLaunching(_ note: Notification) {
         ensureLaunchAgent()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -24,10 +32,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.action = #selector(handleClick(_:))
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
-        refresh()
-        if !hasPermission() {
-            copyInstallCommand()
-            showSetupAlert(autoCopied: true)
+        applyUI(readState())
+        workQueue.async { [weak self] in
+            guard let self, !self.hasPermission() else { return }
+            DispatchQueue.main.async {
+                self.copyInstallCommand()
+                self.showSetupAlert(autoCopied: true)
+            }
         }
         // Poll for external changes. 10s with tolerance keeps CPU/wakeups negligible.
         let t = Timer(timeInterval: 10.0, repeats: true) { [weak self] _ in self?.refresh() }
@@ -80,12 +91,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - pmset
 
     private func toggle() {
-        let target = active ? "0" : "1"
-        if runSudoPmset(target) != 0 {
-            copyInstallCommand()
-            showSetupAlert(autoCopied: true)
+        // Optimistic: flip the icon instantly, do the slow work in background,
+        // then reconcile with the real system state (reverts if sudo failed).
+        let target = !active
+        applyUI(target)
+        workQueue.async { [weak self] in
+            guard let self else { return }
+            let status = self.runSudoPmset(target ? "1" : "0")
+            let real = self.readState()
+            DispatchQueue.main.async {
+                self.applyUI(real)
+                if status != 0 {
+                    self.copyInstallCommand()
+                    self.showSetupAlert(autoCopied: true)
+                }
+            }
         }
-        refresh()
     }
 
     /// Runs `sudo -n pmset -a disablesleep <value>`. Returns process exit status.
@@ -122,10 +143,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return false // line absent => disablesleep off
     }
 
+    /// Background poll: reads real state off-main, updates UI only on change.
     private func refresh() {
-        active = readState()
-        statusItem.button?.image = Self.cupImage(active: active)
-        statusItem.button?.toolTip = active
+        workQueue.async { [weak self] in
+            guard let self else { return }
+            let real = self.readState()
+            DispatchQueue.main.async {
+                if real != self.active { self.applyUI(real) }
+            }
+        }
+    }
+
+    /// Main-thread-only. Sets icon + tooltip from pre-rendered images.
+    private func applyUI(_ on: Bool) {
+        active = on
+        statusItem.button?.image = on ? Self.iconOn : Self.iconOff
+        statusItem.button?.toolTip = on
             ? "Lid-closed run: ON (click to disable)"
             : "Lid-closed run: OFF (click to enable)"
     }
